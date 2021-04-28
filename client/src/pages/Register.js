@@ -1,16 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 
-import { useState } from 'react';
+import { useContext, useState } from 'react';
+import { API } from "../config/api";
+import { UserContext } from "../contexts/userContext";
+
 import "../style/global.css";
 
 function Register() {
-
+    const [, dispatch] = useContext(UserContext);
+    const router = useHistory()
     const [form, setForm] = useState({
+        nama: "",
         email: "",
         password: "",
     });
 
-    const { email, password } = form;
+    const { nama, email, password } = form;
 
     const onChange = (e) => {
         setForm({
@@ -19,10 +24,25 @@ function Register() {
         });
     };
 
-    const onSubmit = (e) => {
+    const onSubmit = async (e) => {
         e.preventDefault();
+        try {
+            const config = {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+            const response = await API.post('/register', JSON.stringify(form), config);
 
-        console.log(e);
+            dispatch({
+                type: "REGISTER_SUCCESS",
+                payload: response.data.data.user
+            })
+
+            router.push('/')
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     return (
@@ -41,6 +61,15 @@ function Register() {
                                     <div className="card-body p-2">
                                         <div className="form-group">
                                             <input
+                                                value={nama}
+                                                onChange={(e) => onChange(e)}
+                                                type="text"
+                                                className="form-control"
+                                                name="nama"
+                                                placeholder="nama" />
+                                        </div>
+                                        <div className="form-group">
+                                            <input
                                                 value={email}
                                                 onChange={(e) => onChange(e)}
                                                 type="email"
@@ -52,7 +81,7 @@ function Register() {
                                             <input
                                                 value={password}
                                                 onChange={(e) => onChange(e)}
-                                                type="text"
+                                                type="password"
                                                 className="form-control"
                                                 name="password"
                                                 placeholder="password" />

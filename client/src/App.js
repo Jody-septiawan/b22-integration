@@ -13,6 +13,8 @@ import Login from './pages/Login';
 import Axios from './pages/Axios';
 import ReactQuery from './pages/ReactQuery';
 import Navbar from './components/Navbar';
+import Register from './pages/Register';
+import PrivateRoute from './components/route/PrivateRoute';
 
 // init token pada axios setiap kali aplikasi direfresh
 if (localStorage.token) {
@@ -20,7 +22,7 @@ if (localStorage.token) {
 }
 
 function App() {
-  const [state, dispatch] = useContext(UserContext);
+  const [, dispatch] = useContext(UserContext);
 
   const checkUser = async () => {
     try {
@@ -36,12 +38,11 @@ function App() {
       payload.token = localStorage.token;
 
       dispatch({
-        type: "USER_SUCCESS",
+        type: "AUTH_SUCCESS",
         payload
       })
 
     } catch (error) {
-      console.log(error);
       dispatch({
         type: "AUTH_ERROR"
       })
@@ -61,9 +62,10 @@ function App() {
           <Navbar />
           <div className="container">
             <Switch>
-              <Route exact path="/Login" component={Login} />
-              <Route exact path="/Axios" component={Axios} />
-              <Route exact path="/React-Query" component={ReactQuery} />
+              <Route exact path="/login" component={Login} />
+              <Route exact path="/register" component={Register} />
+              <PrivateRoute exact path="/axios" component={Axios} />
+              <PrivateRoute exact path="/react-query" component={ReactQuery} />
               <Route exact path="/" component={Home} />
             </Switch>
           </div>

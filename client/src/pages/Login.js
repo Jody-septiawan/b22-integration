@@ -8,7 +8,7 @@ import { API, setAuthToken } from "../config/api";
 
 function Login() {
     const router = useHistory();
-    const [state, dispatch] = useContext(UserContext);
+    const [, dispatch] = useContext(UserContext);
 
     const [message, setMessage] = useState('');
 
@@ -91,7 +91,7 @@ function Login() {
                                             <input
                                                 value={password}
                                                 onChange={(e) => onChange(e)}
-                                                type="text"
+                                                type="password"
                                                 className="form-control"
                                                 name="password"
                                                 placeholder="password" />

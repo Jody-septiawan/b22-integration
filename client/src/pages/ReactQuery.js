@@ -21,7 +21,7 @@ function ReactQueryComponent() {
     const { email, password, nama } = form;
 
     // LOAD DATA
-    let { data: users, refetch } = useQuery("usersCache",
+    const { data: users, refetch } = useQuery("usersCache",
         async () => {
             const response = await API.get('/users');
             return response.data.data.users
@@ -191,6 +191,7 @@ function ReactQueryComponent() {
                             <TableRowUser
                                 user={user}
                                 index={index}
+                                key={user.id}
                                 getUserById={getUserById}
                                 deleteUserById={deleteUserById}
                             />

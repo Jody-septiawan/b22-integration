@@ -1,6 +1,6 @@
-const TableRowUser = ({ user, index, key, getUserById, deleteUserById }) => {
+const TableRowUser = ({ user, index, getUserById, deleteUserById }) => {
     return (
-        <tr key={index + 1}>
+        <tr>
             <td>{index + 1}</td>
             <td>{user.email}</td>
             <td>{user.nama}</td>
