@@ -14,6 +14,9 @@ module.exports = {
       isDone: {
         type: Sequelize.BOOLEAN
       },
+      screenshot: {
+        type: Sequelize.STRING
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

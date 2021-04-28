@@ -3,7 +3,7 @@ const joi = require('joi');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-exports.regitrasi = async (req, res) => {
+exports.registrasi = async (req, res) => {
     try {
         const { email, password } = req.body;
         const data = req.body;
