@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket io implementation</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <main id="container">
+    <div class="chat">
+      <h1 class="title">Hello world</h1>
+      <ul id="messages"></ul>
+      <form id="form" action="">
+        <input type="text" id="chat" autocomplete="off" />
+        <input type="submit"></input>
+      </form>
+    </div>
+    <div class="history">
+      <h1 class="title">Chat history</h1>
+      <div class="chats"></div>
+    </div>
+  </main>
+  <footer>
+    <button onclick="disconnect()">disconnect</button>
+  </footer>
+  <!-- <button onclick="disconnect()">disconnect</button> -->
+  <script>
+    const socket = io()
+
+    const disconnect = () => {
+      socket.disconnect();
+    }
+
+    const options = {
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric', 
+      minute: 'numeric',
+    }
+    const form = document.getElementById("form");
+    const messages = document.getElementById("messages");
+    const input = document.getElementById("chat");
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if(input.value) {
+        socket.emit('chat message', {
+          message: input.value
+        });
+        input.value = '';
+      }
+    })
+
+    socket.on('donatur list', (data) => {
+      setDonature(data)
+    })
+    socket.on('chat message', (data) => {
+      const item = document.createElement('li');
+      item.textContent = data;
+      messages.appendChild(item);
+      window.scrollTo(0, document.body.scrollHeight)
+    })
+
+    socket.on('all chat', (data) => {
+      const historyContainer = document.querySelector('.chats');
+      historyContainer.innerHTML = `
+        ${data.map((chat) => {
+          const date = new Date(chat.createdAt)
+          const dateFormatted = new Intl.DateTimeFormat('en-US', options).format(date); 
+          return (`
+          <p>${chat.message} <span>${dateFormatted}</span></p>
+          `) 
+        }
+      ).join('')}`
+    })
+  </script>
+</body>
+</html>
