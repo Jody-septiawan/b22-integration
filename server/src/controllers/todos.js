@@ -1,59 +1,5 @@
 const { todos } = require("../../models");
 
-exports.getTodos = async (req, res) => {
-  try {
-    let dataTodos = await todos.findAll({
-      attributes: {
-        exclude: ["createdAt", "updatedAt"],
-      },
-    });
-    dataTodos = JSON.parse(JSON.stringify(dataTodos));
-    dataTodos = dataTodos.map((todo) => {
-      return {
-        ...todo,
-        screenshot_url: process.env.FILE_PATH + todo.screenshot,
-      };
-    });
-
-    console.log(dataTodos);
-    res.send({
-      status: "success",
-      data: {
-        todos: dataTodos,
-      },
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      status: "failed",
-      message: "server error",
-    });
-  }
-};
-
-exports.getTodo = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const dataTodos = await todos.findOne({
-      where: {
-        id,
-      },
-      attributes: {
-        exclude: ["createdAt", "updatedAt"],
-      },
-    });
-    res.send({
-      status: "success",
-      data: dataTodos,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      status: "failed",
-      message: "server error",
-    });
-  }
-};
 
 exports.addTodo = async (req, res) => {
   const data = req.body;
@@ -66,18 +12,6 @@ exports.addTodo = async (req, res) => {
       });
     }
 
-    // let todos = await todos.findAll({
-    //     attributes: {
-    //         exclude: ["createdAt", "updatedAt"],
-    //     }
-    // });
-
-    // todos = todos.map(todo => {
-    //     return {
-    //         ...todo,
-    //         screenshot: `${process.env.FILE_PATH + todo.screenshot}`
-    //     }
-    // })
     res.send({
       status: "success",
     });
@@ -104,12 +38,23 @@ exports.updateTodo = async (req, res) => {
       });
     }
 
-    await todos.update(data, {
-      where: {
-        id,
-      },
-    });
-
+    if (req.files) {
+      await todos.update({
+        ...data,
+        screenshot: req.files.image[0].filename,
+      }, {
+        where: {
+          id,
+        },
+      }
+      );
+    } else {
+      await todos.update(data, {
+        where: {
+          id,
+        },
+      });
+    }
     res.send({
       status: "update success",
       data: id,
@@ -150,3 +95,71 @@ exports.deleteTodo = async (req, res) => {
     });
   }
 };
+
+
+
+// socketIO implementation controllers like
+exports.socketGetTodos = async () => {
+  let dataTodos = await todos.findAll({
+    attributes: {
+      exclude: ["createdAt", "updatedAt"],
+    },
+  });
+
+  dataTodos = JSON.parse(JSON.stringify(dataTodos));
+  return dataTodos.map((todo) => {
+    return {
+      ...todo,
+      screenshot_url: process.env.FILE_PATH + todo.screenshot,
+    };
+  });
+}
+
+exports.socketGetTodo = async (id) => {
+  try {
+    let dataTodo = await todos.findOne({
+      where: {
+        id,
+      },
+      attributes: {
+        exclude: ["createdAt", "updatedAt"],
+      },
+    });
+    dataTodo = JSON.parse(JSON.stringify(dataTodo));
+    
+    return {
+      status: "success",
+      data: {
+        ...dataTodo,
+        screenshot_url: process.env.FILE_PATH + dataTodo.screenshot,
+      },
+    };
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+exports.socketDeleteTodo = async (id) => {
+  try {
+    const checkTodo = todos.findOne({ where: { id } });
+
+    if (!checkTodo) {
+      return res.send({
+        status: "failed",
+        message: "Data not found",
+      });
+    }
+
+    await todos.destroy({ where: { id } });
+
+    return {
+      status: "delete success",
+      data: { id },
+    };
+  } catch (error) {
+    return{
+      status: "failed",
+      message: "server error",
+    };
+  }
+}

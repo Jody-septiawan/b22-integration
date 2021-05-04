@@ -6,8 +6,6 @@ const { auth } = require('../middlewares/auth');
 const { uploadFile } = require('../middlewares/uploadFile');
 
 const {
-    getTodos,
-    getTodo,
     addTodo,
     updateTodo,
     deleteTodo } = require('../controllers/todos');
@@ -25,10 +23,8 @@ router.get("/user/:id", auth, getUser);
 router.delete("/user/:id", auth, deleteUser);
 router.patch("/user/:id", auth, updateUser);
 
-router.get("/todos", getTodos);
-router.get("/todo/:id", getTodo);
 router.post("/todo", uploadFile("image"), addTodo);
-router.patch("/todo/:id", updateTodo);
-router.delete("/todo/:id", deleteTodo);
+router.patch("/todo/:id",uploadFile("image"), updateTodo);
+router.delete("/todo/:id", auth, deleteTodo);
 
 module.exports = router;

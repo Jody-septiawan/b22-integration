@@ -6,9 +6,16 @@ const routers = require('./src/routers');
 const {Server} = require('socket.io');
 const cors = require('cors');
 const server = http.createServer(app);
-const io = new Server(server);
+const fs = require('fs');
 
-const { Chat } = require('./models');
+// controllers like
+const socketTodos =  require('./src/socket/todos');
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000" //client domain/url
+  }
+});
 
 const port = 5000;
 
@@ -18,45 +25,21 @@ app.use('/api/v1', routers);
 app.use('/uploads', express.static('uploads'));
 app.use('/static', express.static(__dirname + '/public'))
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html')
-});
+// implement namespace or endpoint like in http req,res
+const todosNameSpace = io.of('/todos').on('connection', (socket) => {
+  socketTodos.respond(todosNameSpace, socket);
+})
 
-let interval;
-
-async function getChat() {
-  let chats = await Chat.findAll();
-  chats = JSON.parse(JSON.stringify(chats));
-  io.emit('all chat', chats);
-};
-
-io.on('connection', (socket) => {
-  console.log('a user connection: ', socket.id);
-  if (interval) {
-    clearInterval(interval)
+todosNameSpace.use((socket, next) => {
+  if (socket.handshake.auth && socket.handshake.auth.token) {
+    const token = socket.handshake.auth.token;
+    console.log(token)
+    next();
+  } else {
+    next(new Error('invalid'));
   }
-
-  interval = setInterval(async () => {
-    await getChat();
-  }, 5000);
-
-  socket.on('disconnect', () => {
-    console.log('user disconnect');
-    clearInterval(interval);
-    socket.disconnect();
-  })
-
-  socket.on('chat message', async (data) => {
-    console.log('data received from client: ', data);
-    const chat = await Chat.create(data);
-    io.emit('chat message', chat.message);
-  })
-
-  socket.on('todos', () => {
-    
-    io.emit('donatur list', data)
-  })
-});
+})
+//
 
 
 server.listen(port, () => console.log(`Running on port ${port}`));

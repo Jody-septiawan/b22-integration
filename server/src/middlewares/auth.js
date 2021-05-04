@@ -28,3 +28,8 @@ exports.auth = (req, res, next) => {
         })
     }
 }
+
+
+exports.socketAuth = () => {
+    
+}
