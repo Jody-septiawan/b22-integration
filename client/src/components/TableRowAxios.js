@@ -1,4 +1,12 @@
-const TableRowAxios = ({ todo, index, getTodoById, deleteTodoById }) => {
+const TableRowAxios = (props) => {
+    const { 
+        todo, 
+        index, 
+        getTodoById, 
+        deleteTodoById,
+        handlePush
+    } = props;
+
     return (
         <tr key={index}>
             <td>{index + 1}</td>
@@ -29,6 +37,12 @@ const TableRowAxios = ({ todo, index, getTodoById, deleteTodoById }) => {
                     onClick={() => deleteTodoById(todo.id)}
                 >
                     delete
+                </button>
+                <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handlePush(todo.id)}
+                >
+                    go to detail
                 </button>
             </td>
         </tr>

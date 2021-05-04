@@ -1,15 +1,20 @@
 import { useContext, useState, useEffect } from 'react';
-import { UserContext } from "../contexts/userContext";
+import {useHistory} from 'react-router-dom';
+import {io} from 'socket.io-client';
 
-import { API } from "../config/api";
+import { UserContext } from "../contexts/userContext";
 
 import LoginComponent from '../components/LoginComp';
 import TableRowAxios from '../components/TableRowAxios';
 import TodoForm from '../components/forms/TodoForm';
 
+import { API } from "../config/api";
+
+let socket;
 
 function AxiosComponent() {
     const [todos, setTodos] = useState([]);
+    const router = useHistory();
     const [idForUpdate, setIdForUpdate] = useState(null);
     const [form, setForm] = useState({
         title: "",
@@ -18,17 +23,26 @@ function AxiosComponent() {
     });
 
     // LOAD/READ DATA
-    const loadTodos = async () => {
-        try {
-            const response = await API.get("/todos");
-            setTodos(response.data.data.todos);
-        } catch (error) {
-            console.log(error);
-        }
+    const loadTodos = async (socket) => {
+        await socket.emit('load todos')
+        await socket.on('todos', (data) => {
+            console.log(data)
+            setTodos(data);
+        })
     }
 
     useEffect(() => {
-        loadTodos();
+        // server domain/url
+        socket = io('http://localhost:5000/todos', {
+            auth: {
+                token: localStorage.getItem("token")
+            }
+        })
+        loadTodos(socket);
+
+        return () => {
+            socket.disconnect()
+        }
     }, []);
 
     // ADD DATA
@@ -52,9 +66,12 @@ function AxiosComponent() {
             formData.set("isDone", form.isDone === "true" ? true : false);
             formData.append("image", form.screenshot[0], form.screenshot[0].name)
             await API.post("/todo", formData, config);
-
-            loadTodos()
-
+            loadTodos(socket);
+            setForm({
+                title: "",
+                isDone: "false",
+                screenshot: null
+            })
         } catch (error) {
             console.log(error);
         }
@@ -63,11 +80,10 @@ function AxiosComponent() {
     // DELETE DATA
     const deleteTodoById = async (id) => {
         try {
-            await API.delete(`/todo/${id}`);
-
-            loadTodos()
+            await socket.emit('delete todo', id);
+            await loadTodos();
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
     }
 
@@ -76,6 +92,7 @@ function AxiosComponent() {
         try {
             const response = await API.get(`/todo/${id}`);
             const todo = response.data.data;
+            console.log(todo)
             setIdForUpdate(todo.id);
 
             setForm({
@@ -89,33 +106,57 @@ function AxiosComponent() {
     }
 
     const updateTodo = async () => {
+        console.log(form)
         try {
+            if(form.screenshot) {
+                const config = {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    }
+                }
+    
+                const formData = new FormData();
+                formData.set("title", form.title);
+                formData.set("isDone", form.isDone === "true" ? true : false);
+                formData.append("image", form.screenshot[0], form.screenshot[0].name);
+                await API.patch(`/todo/${idForUpdate}`, formData, config);
+                
+                setIdForUpdate(null);
+                setForm({
+                    title: "",
+                    isDone: "true",
+                    screenshot: null
+                })
+                return loadTodos(socket);
+            }
+
             const config = {
                 headers: {
                     "Content-Type": "application/json"
                 }
             }
-
             const body = JSON.stringify({
                 title: form.title,
-                isDone: form.isDone === "true" ? true : false,
-                image: form.image
+                isDone: form.isDone === "true" ? true : false
             });
 
-            const response = await API.patch(`/todo/${idForUpdate}`, body, config);
-
+            await API.patch(`/todo/${idForUpdate}`, body, config);
             setIdForUpdate(null);
 
             setForm({
                 title: "",
-                isDone: "true"
+                isDone: "true",
+                screenshot: null
             })
-
+            loadTodos(socket);
         } catch (error) {
             console.log(error);
         }
     }
 
+    const goToTodoDetail = (id) => {
+        router.push(`/todo/${id}`);
+    }
     return (
         <>
             <TodoForm 
@@ -123,7 +164,8 @@ function AxiosComponent() {
             idForUpdate={idForUpdate}
             updateTodo={updateTodo}
             handleSubmit={handleSubmit}
-            handleChange={onChange}/>
+            handleChange={onChange}
+            />
             {todos.length < 1 ? (
             <>
                 <h1 style={{textAlign: "center"}}>Todos empty</h1>
@@ -150,6 +192,7 @@ function AxiosComponent() {
                                     key={todo.id}
                                     getTodoById={getTodoById}
                                     deleteTodoById={deleteTodoById}
+                                    handlePush={goToTodoDetail}
                                 />
                             ))
                         }

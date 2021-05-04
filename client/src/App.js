@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { UserContext } from "./contexts/userContext";
 
 import { QueryClient, QueryClientProvider } from 'react-query';
+import {ReactQueryDevtools} from 'react-query/devtools'
 
 import { API, setAuthToken } from './config/api';
 
@@ -15,6 +16,7 @@ import ReactQuery from './pages/ReactQuery';
 import Navbar from './components/Navbar';
 import Register from './pages/Register';
 import PrivateRoute from './components/route/PrivateRoute';
+import TodoDetail from './pages/TodoDetail';
 
 // init token pada axios setiap kali aplikasi direfresh
 if (localStorage.token) {
@@ -53,7 +55,13 @@ function App() {
     checkUser();
   }, []);
 
-  const client = new QueryClient();
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false
+      }
+    }
+  });
 
   return (
     <>
@@ -64,12 +72,14 @@ function App() {
             <Switch>
               <Route exact path="/login" component={Login} />
               <Route exact path="/register" component={Register} />
+              <Route exact path="/todo/:id" component={TodoDetail} />
               <PrivateRoute exact path="/axios" component={Axios} />
               <PrivateRoute exact path="/react-query" component={ReactQuery} />
               <Route exact path="/" component={Home} />
             </Switch>
           </div>
         </Router>
+        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </>
   );
