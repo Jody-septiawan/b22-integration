@@ -2,7 +2,7 @@
   "development": {
     "username": "root",
     "password": null,
-    "database": "b22-integration",
+    "database": "chat-app",
     "host": "localhost",
     "dialect": "mysql"
   },

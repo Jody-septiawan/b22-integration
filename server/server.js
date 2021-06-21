@@ -10,7 +10,7 @@ const io = new Server(server);
 
 const { Chat } = require('./models');
 
-const port = 5000;
+const port = 5500;
 
 app.use(express.json());
 app.use(cors());
@@ -32,18 +32,14 @@ async function getChat() {
 
 io.on('connection', (socket) => {
   console.log('a user connection: ', socket.id);
-  if (interval) {
-    clearInterval(interval)
-  }
-
   interval = setInterval(async () => {
     await getChat();
   }, 5000);
 
   socket.on('disconnect', () => {
     console.log('user disconnect');
+    console.log(interval)
     clearInterval(interval);
-    socket.disconnect();
   })
 
   socket.on('chat message', async (data) => {

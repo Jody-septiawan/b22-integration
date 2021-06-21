@@ -65,7 +65,7 @@
       messages.appendChild(item);
       window.scrollTo(0, document.body.scrollHeight)
     })
-
+    
     socket.on('all chat', (data) => {
       const historyContainer = document.querySelector('.chats');
       historyContainer.innerHTML = `
